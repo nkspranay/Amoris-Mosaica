@@ -5,14 +5,13 @@ python-multipart==0.0.9        # multipart file uploads
 websockets==12.0               # WebSocket support
 
 # ── Image processing ───────────────────────────────────────────────────────
-Pillow==10.3.0
+Pillow==10.4.0
 numpy==1.26.4
 opencv-python-headless==4.9.0.80  # headless for Render (no GUI dependencies)
 scipy==1.13.0                  # KD-tree for color matching
 scikit-image==0.23.2           # Additional image utilities
 
 # ── File handling ──────────────────────────────────────────────────────────
-python-magic==0.4.27           # MIME type validation for uploads
 aiofiles==23.2.1               # Async file I/O
 
 # ── HTTP client (image fetching) ───────────────────────────────────────────

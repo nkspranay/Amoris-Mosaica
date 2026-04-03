@@ -9,7 +9,7 @@ __pycache__/
 venv/
 .venv/
 *.egg-info/
-.python-version
+#.python-version
 
 # Logs
 *.log
