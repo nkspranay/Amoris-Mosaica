@@ -1,0 +1,44 @@
+# Environment
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+.python-version
+
+# Logs
+*.log
+
+# Tile images — too large for git
+tiles/presets/nature/
+tiles/presets/artworks/
+tiles/presets/space/
+
+# Temp folder
+temp/
+
+# Private assets — never public
+assets/overrides/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+dist/
+
+# Cache files that ARE committed to git:
+# cache/*.npy
+# cache/*_files.npy
+# cache/*_tiles.bin
+# cache/metadata.json
+# DO NOT add cache/ to gitignore

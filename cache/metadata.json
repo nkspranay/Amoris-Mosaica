@@ -1,0 +1,23 @@
+{
+  "artworks": {
+    "dataset_id": "artworks",
+    "tile_count": 4975,
+    "tile_size": 50,
+    "size_mb": 35.58,
+    "bin_file": "artworks_tiles.bin"
+  },
+  "nature": {
+    "dataset_id": "nature",
+    "tile_count": 4387,
+    "tile_size": 50,
+    "size_mb": 31.38,
+    "bin_file": "nature_tiles.bin"
+  },
+  "space": {
+    "dataset_id": "space",
+    "tile_count": 2649,
+    "tile_size": 50,
+    "size_mb": 18.95,
+    "bin_file": "space_tiles.bin"
+  }
+}
