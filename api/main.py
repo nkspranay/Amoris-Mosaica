@@ -81,6 +81,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=[
+        "X-Tile-Count",
+        "X-Processing-Ms",
+        "X-Grid-Width",
+        "X-Grid-Height",
+    ],
 )
 
 
