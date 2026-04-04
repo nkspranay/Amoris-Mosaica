@@ -2,13 +2,14 @@ services:
   - type: web
     name: photo-mosaic-api
     runtime: python
+    pythonVersion: "3.11.0"
     buildCommand: pip install -r requirements.txt
     startCommand: bash scripts/startup.sh
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: "3.11.0"
       - key: GITHUB_ASSETS_TOKEN
-        sync: false          # set manually in Render dashboard
+        sync: false
       - key: GITHUB_ASSETS_REPO
         value: nkspranay/mosaic-private-assets
       - key: NASA_API_KEY
@@ -20,4 +21,4 @@ services:
       - key: OVERRIDE_MAP
         sync: false
       - key: ALLOWED_ORIGINS
-        sync: false          # set to your Vercel URL after deploying frontend
+        sync: false
