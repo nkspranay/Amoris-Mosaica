@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import styles from './InputScreen.module.css'
+import { apiUrl } from '../config.js'
 
 const QUALITY_LABELS = {
   1: { label: 'Draft',  desc: 'Fast preview' },
@@ -9,7 +10,7 @@ const QUALITY_LABELS = {
 
 export default function InputScreen({ onSubmit }) {
   const [datasets,    setDatasets]    = useState([])
-  const [inputMode,   setInputMode]   = useState('upload')   // 'upload' | 'prompt'
+  const [inputMode,   setInputMode]   = useState('upload')
   const [file,        setFile]        = useState(null)
   const [preview,     setPreview]     = useState(null)
   const [prompt,      setPrompt]      = useState('')
@@ -20,7 +21,7 @@ export default function InputScreen({ onSubmit }) {
   const fileInputRef = useRef()
 
   useEffect(() => {
-    fetch('/api/datasets')
+    fetch(apiUrl('/api/datasets'))
       .then(r => r.json())
       .then(data => {
         setDatasets(data)
@@ -62,17 +63,15 @@ export default function InputScreen({ onSubmit }) {
 
   return (
     <div className={styles.screen}>
-      {/* ── Header ── */}
       <header className={styles.header}>
         <div className={styles.logo}>
           <span className={styles.logoGrid}>▦</span>
           <span>Amoris Mosaica</span>
         </div>
-        <p className={styles.tagline}>"Built from fragments. Made with love.”</p>
+        <p className={styles.tagline}>"Built from fragments. Made with love."</p>
       </header>
 
       <main className={styles.main}>
-        {/* ── Left: Input Zone ── */}
         <section className={styles.inputZone}>
           <div className={styles.modeToggle}>
             <button
@@ -157,9 +156,7 @@ export default function InputScreen({ onSubmit }) {
           </button>
         </section>
 
-        {/* ── Right: Options ── */}
         <section className={styles.optionsZone}>
-          {/* Dataset picker */}
           <div className={styles.optionGroup}>
             <h3 className={styles.optionLabel}>Tile Dataset</h3>
             <div className={styles.datasetGrid}>
@@ -188,7 +185,6 @@ export default function InputScreen({ onSubmit }) {
             </div>
           </div>
 
-          {/* Quality slider */}
           <div className={styles.optionGroup}>
             <h3 className={styles.optionLabel}>
               Quality — <span className={styles.amber}>{QUALITY_LABELS[quality].label}</span>
@@ -212,7 +208,6 @@ export default function InputScreen({ onSubmit }) {
             </div>
           </div>
 
-          {/* Info box */}
           <div className={styles.infoBox}>
             <p className={styles.infoTitle}>How it works</p>
             <ol className={styles.infoList}>

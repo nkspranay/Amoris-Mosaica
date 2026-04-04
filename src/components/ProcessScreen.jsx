@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import styles from './ProcessScreen.module.css'
+import { apiUrl, wsUrl } from '../config.js'
 
 const STAGE_MESSAGES = {
   preprocess: 'Enhancing your image...',
@@ -9,7 +10,6 @@ const STAGE_MESSAGES = {
   assemble:   'Assembling your mosaic...',
 }
 
-// Precomputed stage order to avoid recalculation
 const STAGE_ORDER = Object.keys(STAGE_MESSAGES)
 
 const TILE_COLORS = [
@@ -26,36 +26,28 @@ export default function ProcessScreen({ config, onComplete, onError }) {
   const [tiles,   setTiles]   = useState([])
   const [error,   setError]   = useState('')
 
-  const wsRef              = useRef(null)
-  const pollRef            = useRef(null)
-  const jobIdRef           = useRef(null)
-  const startedRef         = useRef(false)
-  const doneRef            = useRef(false)
-  const isUnmountingRef    = useRef(false)
+  const wsRef           = useRef(null)
+  const pollRef         = useRef(null)
+  const jobIdRef        = useRef(null)
+  const startedRef      = useRef(false)
+  const doneRef         = useRef(false)
+  const isUnmountingRef = useRef(false)
 
-  const GRID_COLS  = 24
-  const GRID_ROWS  = 16
+  const GRID_COLS   = 24
+  const GRID_ROWS   = 16
   const TOTAL_CELLS = GRID_COLS * GRID_ROWS
 
   useEffect(() => {
     if (startedRef.current) return
     startedRef.current = true
-
     startGeneration()
-
     return () => {
       isUnmountingRef.current = true
-
-      // Only close WebSocket after job completion
-      if (doneRef.current && wsRef.current) {
-        wsRef.current.close()
-      }
-
+      if (doneRef.current && wsRef.current) wsRef.current.close()
       if (pollRef.current) clearInterval(pollRef.current)
     }
   }, [])
 
-  // Tile animation sync based on real percent
   useEffect(() => {
     const target = Math.floor((percent / 100) * TOTAL_CELLS)
     if (target > tiles.length) {
@@ -64,7 +56,7 @@ export default function ProcessScreen({ config, onComplete, onError }) {
         const newTiles = [...prev]
         while (newTiles.length < target) {
           newTiles.push({
-            id: newTiles.length,
+            id:    newTiles.length,
             color: TILE_COLORS[Math.floor(Math.random() * TILE_COLORS.length)],
             delay: Math.random() * 0.3,
           })
@@ -77,55 +69,33 @@ export default function ProcessScreen({ config, onComplete, onError }) {
   async function startGeneration() {
     const { inputMode, file, prompt, datasetId, quality, sessionId } = config
 
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const wsUrl      = `${wsProtocol}//${window.location.host}/ws/progress/${sessionId}`
-
-    const ws = new WebSocket(wsUrl)
+    const ws = new WebSocket(wsUrl(`/ws/progress/${sessionId}`))
     wsRef.current = ws
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data)
-
       if (data.type === 'ping') return
-
-      if (data.stage) setStage(data.stage)
-
-      if (data.percent !== undefined) {
-        setPercent(prev => Math.max(prev, data.percent))
-      }
-
-      if (data.eta_ms) setEtaMs(data.eta_ms)
-
+      if (data.stage)               setStage(data.stage)
+      if (data.percent !== undefined) setPercent(prev => Math.max(prev, data.percent))
+      if (data.eta_ms)              setEtaMs(data.eta_ms)
       if (data.done && !doneRef.current) {
         doneRef.current = true
         fetchResult(jobIdRef.current)
       }
-
       if (data.error) {
         setError('Generation failed. Please try again.')
         setTimeout(onError, 2000)
       }
     }
 
-    ws.onopen = () => {
-      console.log('[ws] connected')
-    }
+    ws.onopen  = () => console.log('[ws] connected')
+    ws.onclose = () => { if (!isUnmountingRef.current) console.log('[ws] closed') }
+    ws.onerror = (err) => console.log('[ws] error', err)
 
-    ws.onclose = () => {
-      if (!isUnmountingRef.current) {
-        console.log('[ws] unexpected close')
-      }
-    }
-
-    ws.onerror = (err) => {
-      console.log('[ws] error', err)
-    }
-
-    // Wait for WebSocket connection
-    await new Promise((resolve, reject) => {
+    await new Promise((resolve) => {
       if (ws.readyState === WebSocket.OPEN) return resolve()
       ws.onopen = resolve
-      ws.onerror = reject
+      setTimeout(resolve, 2000)
     })
 
     const formData = new FormData()
@@ -143,12 +113,10 @@ export default function ProcessScreen({ config, onComplete, onError }) {
     }
 
     try {
-      const response = await fetch(endpoint, { method: 'POST', body: formData })
+      const response = await fetch(apiUrl(endpoint), { method: 'POST', body: formData })
       const { job_id } = await response.json()
-
       jobIdRef.current = job_id
       startPolling(job_id)
-
     } catch {
       setError('Something went wrong.')
       setTimeout(onError, 2000)
@@ -157,24 +125,20 @@ export default function ProcessScreen({ config, onComplete, onError }) {
 
   function startPolling(jobId) {
     if (pollRef.current) clearInterval(pollRef.current)
-
     pollRef.current = setInterval(async () => {
       try {
-        const r = await fetch(`/api/status/${jobId}`)
+        const r    = await fetch(apiUrl(`/api/status/${jobId}`))
         const data = await r.json()
-
         if (data.status === 'done' && !doneRef.current) {
           doneRef.current = true
           clearInterval(pollRef.current)
           fetchResult(jobId)
         }
-
         if (data.status === 'failed') {
           clearInterval(pollRef.current)
           setError(data.error || 'Generation failed.')
           setTimeout(onError, 2000)
         }
-
       } catch {}
     }, 5000)
   }
@@ -182,26 +146,20 @@ export default function ProcessScreen({ config, onComplete, onError }) {
   async function fetchResult(jobId) {
     if (!jobId) return
     clearInterval(pollRef.current)
-
     try {
-      const response = await fetch(`/api/result/${jobId}`)
-
-      const blob = await response.blob()
+      const response = await fetch(apiUrl(`/api/result/${jobId}`))
+      const blob     = await response.blob()
       const imageUrl = URL.createObjectURL(blob)
-
       setPercent(100)
-
       await new Promise(r => setTimeout(r, 600))
-
       onComplete({
         imageUrl,
-        tileCount: parseInt(response.headers.get('X-Tile-Count') || '0'),
+        tileCount:    parseInt(response.headers.get('X-Tile-Count')    || '0'),
         processingMs: parseInt(response.headers.get('X-Processing-Ms') || '0'),
-        gridWidth: parseInt(response.headers.get('X-Grid-Width') || '0'),
-        gridHeight: parseInt(response.headers.get('X-Grid-Height') || '0'),
+        gridWidth:    parseInt(response.headers.get('X-Grid-Width')    || '0'),
+        gridHeight:   parseInt(response.headers.get('X-Grid-Height')   || '0'),
         datasetId: config.datasetId,
       })
-
     } catch {
       setError('Could not retrieve result.')
       setTimeout(onError, 2000)
@@ -215,7 +173,7 @@ export default function ProcessScreen({ config, onComplete, onError }) {
       <header className={styles.header}>
         <div className={styles.logo}>
           <span className={styles.logoGrid}>▦</span>
-          <span>Mosaic</span>
+          <span>Amoris Mosaica</span>
         </div>
       </header>
 
@@ -231,15 +189,11 @@ export default function ProcessScreen({ config, onComplete, onError }) {
                 <div
                   key={i}
                   className={`${styles.tile} ${tile ? styles.tileVisible : ''}`}
-                  style={tile ? {
-                    backgroundColor: tile.color,
-                    animationDelay: `${tile.delay}s`,
-                  } : {}}
+                  style={tile ? { backgroundColor: tile.color, animationDelay: `${tile.delay}s` } : {}}
                 />
               )
             })}
           </div>
-
           <div className={styles.canvasOverlay}>
             <div className={styles.percentDisplay}>
               <span className={styles.percentNum}>{percent}</span>
@@ -252,23 +206,19 @@ export default function ProcessScreen({ config, onComplete, onError }) {
           <p className={styles.stageMsg}>
             {error || STAGE_MESSAGES[stage] || 'Working...'}
           </p>
-
           <div className={styles.progressBar}>
             <div className={styles.progressFill} style={{ width: `${percent}%` }} />
           </div>
-
           <div className={styles.stagePips}>
             {STAGE_ORDER.map(s => (
-              <div key={s}
-                className={`${styles.pip}
-                  ${stage === s ? styles.pipActive : ''}
-                  ${STAGE_ORDER.indexOf(s) < STAGE_ORDER.indexOf(stage) ? styles.pipDone : ''}`}>
+              <div key={s} className={`${styles.pip}
+                ${stage === s ? styles.pipActive : ''}
+                ${STAGE_ORDER.indexOf(s) < STAGE_ORDER.indexOf(stage) ? styles.pipDone : ''}`}>
                 <span className={styles.pipDot} />
                 <span className={styles.pipLabel}>{s}</span>
               </div>
             ))}
           </div>
-
           {etaSeconds && percent < 100 && (
             <p className={styles.eta}>~{etaSeconds}s remaining</p>
           )}
