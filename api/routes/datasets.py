@@ -9,6 +9,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from config import settings
+from tiles.tile_utils import load_tile_index
 
 router = APIRouter()
 
@@ -60,9 +61,15 @@ async def get_datasets():
     datasets = []
 
     for dataset_id, meta in PRESET_META.items():
-        tile_count = _count_tiles(settings.presets_dir / dataset_id)
-        cached     = (settings.cache_dir / f"{dataset_id}.npy").exists()
-        quality    = _quality_badge(tile_count)
+        try:
+            # Load tile index from packed cache (.bin) instead of filesystem
+            index = load_tile_index(dataset_id)
+            tile_count = index.count
+        except Exception:
+            tile_count = 0
+
+        cached  = (settings.cache_dir / f"{dataset_id}.npy").exists()
+        quality = _quality_badge(tile_count)
 
         datasets.append(DatasetInfo(
             id=dataset_id,
