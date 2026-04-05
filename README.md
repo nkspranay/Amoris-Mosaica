@@ -8,6 +8,22 @@ A high-fidelity photo mosaic generator that reconstructs any image from thousand
 
 ---
 
+## Screenshots
+
+**Input screen** — upload an image or enter a text prompt, choose a tile dataset and quality level
+
+![Amoris Mosaica input screen](screenshots/Screenshot_2026-04-06_003036.png)
+
+**Processing** — real-time progress streamed over WebSocket as tiles are matched and assembled
+
+![Amoris Mosaica processing screen](screenshots/Screenshot_2026-04-06_003124.png)
+
+**Output** — 140,400 tiles placed across a 270×360 grid, generated in 341.6s at Master quality
+
+![Amoris Mosaica result — Ronaldo portrait mosaic](screenshots/Screenshot_2026-04-04_235413.png)
+
+---
+
 ## Features
 
 - **Dual-pass mosaic engine** — a base pass for overall color structure and a finer detail pass layered on top, blended for maximum depth
