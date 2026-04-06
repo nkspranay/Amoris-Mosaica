@@ -65,7 +65,11 @@ export default function InputScreen({ onSubmit }) {
     <div className={styles.screen}>
       <header className={styles.header}>
         <div className={styles.logo}>
-          <span className={styles.logoGrid}>▦</span>
+          <img 
+            src="/logo.png" 
+            alt="Amoris Mosaica" 
+            className={styles.logoImg}
+          />
           <span>Amoris Mosaica</span>
         </div>
         <p className={styles.tagline}>"Built from fragments. Made with love."</p>
