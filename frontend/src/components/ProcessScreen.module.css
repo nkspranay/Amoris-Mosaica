@@ -25,6 +25,12 @@
   color: var(--text-1);
 }
 
+.logoImg {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
 .logoGrid { color: var(--amber); font-size: 1.8rem; }
 
 /* ── Main ── */

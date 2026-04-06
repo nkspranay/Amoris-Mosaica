@@ -24,8 +24,12 @@ export default function ResultScreen({ result, onReset }) {
     <div className={styles.screen}>
       <header className={styles.header}>
         <div className={styles.logo}>
-          <span className={styles.logoGrid}>▦</span>
-          <span>Amoris Mosaica</span>
+            <img 
+              src="/logo.png" 
+              alt="Amoris Mosaica" 
+              className={styles.logoImg}
+            />
+            <span>Amoris Mosaica</span>
         </div>
         <button className={styles.newBtn} onClick={onReset}>
           ← Create Another
