@@ -74,6 +74,16 @@ body::before {
   z-index: 1;
 }
 
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-content {
+  flex: 1;
+}
+
 /* ── Typography ── */
 h1, h2, h3 {
   font-family: var(--font-display);
